@@ -6,23 +6,24 @@ namespace Clip.Data;
 public class JsonDataStore : IDataStore
 {
     private readonly DataStoreConfiguration _dataStoreConfiguration;
-    private string FilePath { get; set; }
 
-    public JsonDataStore(DataStoreConfiguration dataStoreConfiguration)
-    {
-        _dataStoreConfiguration = dataStoreConfiguration;
-        FilePath = 
-            $"{_dataStoreConfiguration.Directory}/" +
-            $"{_dataStoreConfiguration.Name}." +
-            $"{_dataStoreConfiguration.Type.ToString().ToLowerInvariant()}";
-    }
+    public JsonDataStore(DataStoreConfiguration dataStoreConfiguration) => _dataStoreConfiguration = dataStoreConfiguration;
 
     public IEnumerable<TObject> GetCollection<TObject>()
     {
-        var data = JsonSerializer.Deserialize<Dictionary<string, List<object>>>(FilePath);
+        var file = ReadFile();
+        var data = JsonSerializer.Deserialize<Dictionary<string, List<object>>>(file);
         var collectionName = typeof(TObject).Name;
         var collectionExists = data.TryGetValue(collectionName, out var collection);
-        return collectionExists && collection is not null ? (IEnumerable<TObject>) collection : [];
+        return collectionExists && collection is not null ? (IEnumerable<TObject>)collection : [];
+    }
+
+    private byte[] ReadFile()
+    {
+        using var file = File.OpenRead(_dataStoreConfiguration.FilePath);
+        var buffer = new byte[file.Length];
+        file.Read(buffer);
+        return buffer;
     }
 
     public TObject GetObject<TObject>(string identifier)
@@ -40,7 +41,7 @@ public class JsonDataStore : IDataStore
         throw new NotImplementedException();
     }
 
-    public void DeleteObject<TObject>(TObject obj)
+    public void DeleteObject<TObject>(string identifier)
     {
         throw new NotImplementedException();
     }
