@@ -1,6 +1,6 @@
 namespace Clip.Data.Configuration;
 
-public enum DataStoreType
+public enum DataFormat
 {
     JSON,
     TOML,
