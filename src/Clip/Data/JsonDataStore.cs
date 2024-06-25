@@ -3,46 +3,25 @@ using Clip.Data.Configuration;
 
 namespace Clip.Data;
 
-public class JsonDataStore : IDataStore
+public class JsonDataStore<TData> : IDataStoreAsync<TData>
 {
     private readonly DataStoreConfiguration _dataStoreConfiguration;
 
     public JsonDataStore(DataStoreConfiguration dataStoreConfiguration) => _dataStoreConfiguration = dataStoreConfiguration;
 
-    public IEnumerable<TObject> GetCollection<TObject>()
+    public async Task<TData?> RetrieveDataAsync(CancellationToken cancellationToken)
     {
-        var file = ReadFile();
-        var data = JsonSerializer.Deserialize<Dictionary<string, List<object>>>(file);
-        var collectionName = typeof(TObject).Name;
-        var collectionExists = data.TryGetValue(collectionName, out var collection);
-        return collectionExists && collection is not null ? (IEnumerable<TObject>)collection : [];
+        if (!File.Exists(_dataStoreConfiguration.FilePath))
+            return default;
+        using var fileStream = File.OpenRead(_dataStoreConfiguration.FilePath);
+        return await JsonSerializer.DeserializeAsync<TData>(fileStream, new JsonSerializerOptions(), cancellationToken);
     }
 
-    private byte[] ReadFile()
+    public Task StoreDataAsync(TData data, CancellationToken cancellationToken)
     {
-        using var file = File.OpenRead(_dataStoreConfiguration.FilePath);
-        var buffer = new byte[file.Length];
-        file.Read(buffer);
-        return buffer;
-    }
-
-    public TObject GetObject<TObject>(string identifier)
-    {
-        throw new NotImplementedException();
-    }
-
-    public void InsertObject<TObject>(TObject obj)
-    {
-        throw new NotImplementedException();
-    }
-
-    public void UpdateObject<TObject>(TObject obj)
-    {
-        throw new NotImplementedException();
-    }
-
-    public void DeleteObject<TObject>(string identifier)
-    {
-        throw new NotImplementedException();
+        var dataAsJson = JsonSerializer.Serialize(data);
+        Directory.CreateDirectory(_dataStoreConfiguration.Directory);
+        File.WriteAllText(_dataStoreConfiguration.FilePath, dataAsJson);
+        return Task.CompletedTask;
     }
 }

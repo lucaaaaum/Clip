@@ -1,10 +1,7 @@
 namespace Clip.Data;
 
-public interface IDataStore
+public interface IDataStoreAsync<TData>
 {
-    public IEnumerable<TObject> GetCollection<TObject>();
-    public TObject GetObject<TObject>(string identifier);
-    public void InsertObject<TObject>(TObject obj);
-    public void UpdateObject<TObject>(TObject obj);
-    public void DeleteObject<TObject>(string identifier);
+    public Task<TData?> RetrieveDataAsync(CancellationToken cancellationToken);
+    public Task StoreDataAsync(TData data, CancellationToken cancellationToken);
 }
