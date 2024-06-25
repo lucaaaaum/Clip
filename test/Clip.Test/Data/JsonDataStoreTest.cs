@@ -27,7 +27,7 @@ public class JsonDataStoreTest
     [TearDown]
     public void TearDown()
     {
-        var filePath = "./data/JsonDataStoreTest.JSON";
+        var filePath = "./data/JsonDataStoreTest.json";
         if (File.Exists(filePath))
             File.Delete(filePath);
         _cancellationTokenSource.Dispose();
